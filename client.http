@@ -1,0 +1,21 @@
+### Create email
+POST http://localhost:3000
+Content-Type: application/json
+
+{
+  "to": "to@test.com",
+  "cc": "cc@test.com",
+  "subject": "subject",
+  "body": "<b>test</b>",
+  "type": "html"
+}
+
+> {%
+
+client.global.set("id", response.body.id)
+
+%}
+
+### Commit email
+PATCH http://localhost:3000/{{id}}/commit
+Content-Type: application/json

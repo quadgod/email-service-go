@@ -4,7 +4,7 @@ build:
 	. ./scripts/build.sh
 start:
 	. ./scripts/start.sh
-start-dev:
-	go run ./cmd/email-service/main.go
+dev:
+	go run -x ./cmd/email-service/main.go
 .PHONY:
 	build
