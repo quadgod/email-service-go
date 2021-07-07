@@ -5,9 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	usecases "github.com/quadgod/email-service-go/internal/app/domain/use-cases"
+	log "github.com/sirupsen/logrus"
 )
 
-func BuildCreateEmailHandler(emailCreator usecases.IEmailCreator) func(c *gin.Context) {
+func BuildCreateEmailHandler(createEmailUseCase usecases.ICreateEmailUseCase) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var payload usecases.CreateEmailDTO
 
@@ -16,10 +17,11 @@ func BuildCreateEmailHandler(emailCreator usecases.IEmailCreator) func(c *gin.Co
 			return
 		}
 
-		email, createErr := emailCreator.Create(payload)
+		email, createErr := createEmailUseCase.Create(payload)
 
 		if createErr != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": createErr.Error()})
+			log.Error("[create email]: Internal server error", createErr.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		}
 

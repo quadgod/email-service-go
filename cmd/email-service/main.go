@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/joho/godotenv"
-	"github.com/quadgod/email-service-go/internal/app/server"
+	"github.com/quadgod/email-service-go/internal/app"
 )
 
 func main() {
 	godotenv.Load()
-	server.Start()
+	app.Start()
 }

@@ -14,7 +14,7 @@ var clientInstanceError error
 
 var buildClientOnce sync.Once
 
-func GetMongoClient() (*mongo.Client, error) {
+func GetMongoClient(config config.IConfig) (*mongo.Client, error) {
 	buildClientOnce.Do(func() {
 		client, err := mongo.NewClient(options.Client().SetHeartbeatInterval(5000).ApplyURI(config.GetDbUrl()))
 		if err != nil {

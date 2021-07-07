@@ -4,7 +4,8 @@ import (
 	"time"
 
 	"github.com/quadgod/email-service-go/internal/app/db/entities"
-	"github.com/quadgod/email-service-go/internal/app/db/repos"
+
+	emailrepository "github.com/quadgod/email-service-go/internal/app/db/repositories/email.repository"
 )
 
 type CreateEmailDTO struct {
@@ -15,15 +16,21 @@ type CreateEmailDTO struct {
 	Type    string `json:"type" binding:"required,oneof=html text"`
 }
 
-type IEmailCreator interface {
+type ICreateEmailUseCase interface {
 	Create(payload CreateEmailDTO) (*entities.Email, error)
 }
 
-type EmailCreator struct {
-	EmailRepository repos.IEmailRepository
+type CreateEmailUseCase struct {
+	emailRepository emailrepository.IEmailRepository
 }
 
-func (instance EmailCreator) Create(payload CreateEmailDTO) (*entities.Email, error) {
+func NewCreateEmailUseCase(emailRepository emailrepository.IEmailRepository) ICreateEmailUseCase {
+	return &CreateEmailUseCase{
+		emailRepository,
+	}
+}
+
+func (instance CreateEmailUseCase) Create(payload CreateEmailDTO) (*entities.Email, error) {
 	var now = time.Now()
 
 	newEmail := entities.Email{
@@ -37,8 +44,9 @@ func (instance EmailCreator) Create(payload CreateEmailDTO) (*entities.Email, er
 		SentAt:      nil,
 		CommittedAt: nil,
 		Attachments: make([]string, 0),
+		ReadyToSend: false,
 	}
 
-	entity, err := instance.EmailRepository.Insert(newEmail)
+	entity, err := instance.emailRepository.Insert(newEmail)
 	return entity, err
 }
