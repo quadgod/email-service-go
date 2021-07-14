@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	usecases "github.com/quadgod/email-service-go/internal/app/domain/use-cases"
+	"github.com/quadgod/email-service-go/internal/app/usecases"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,7 +17,7 @@ func BuildCreateEmailHandler(createEmailUseCase usecases.ICreateEmailUseCase) fu
 			return
 		}
 
-		email, createErr := createEmailUseCase.Create(payload)
+		email, createErr := createEmailUseCase.Create(&payload)
 
 		if createErr != nil {
 			log.Error("[create email]: Internal server error", createErr.Error())

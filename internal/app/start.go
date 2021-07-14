@@ -2,36 +2,53 @@ package app
 
 import (
 	"fmt"
+	"github.com/quadgod/email-service-go/internal/app/providers"
 	"os"
 
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
 	"github.com/quadgod/email-service-go/internal/app/config"
-	emailrepository "github.com/quadgod/email-service-go/internal/app/db/repositories/email.repository"
-	usecases "github.com/quadgod/email-service-go/internal/app/domain/use-cases"
+	"github.com/quadgod/email-service-go/internal/app/db"
+	"github.com/quadgod/email-service-go/internal/app/db/repos"
 	"github.com/quadgod/email-service-go/internal/app/endpoints"
+	"github.com/quadgod/email-service-go/internal/app/usecases"
 	log "github.com/sirupsen/logrus"
 )
 
 func Start() {
-	var config config.IConfig = config.NewEnvConfig()
-	emailRepository := emailrepository.NewMongoEmailRepository(config)
-	createEmailUseCase := usecases.NewCreateEmailUseCase(emailRepository)
-	commitEmailUseCase := usecases.NewCommitEmailUseCase(emailRepository)
-	deleteEmailUseCase := usecases.NewDeleteEmailUseCase(emailRepository)
+	envConfig := config.NewEnvConfig()
 
-	// Log as JSON instead of the default ASCII formatter.
-	log.SetFormatter(&log.JSONFormatter{})
-
-	// Output to stdout instead of the default stderr
-	// Can be any io.Writer, see below for File example
+	log.SetFormatter(&log.TextFormatter{})
 	log.SetOutput(os.Stdout)
 
-	// Only log the warning severity or above.
-	log.SetLevel(log.DebugLevel)
+	logLevel, logLevelParseError := log.ParseLevel(envConfig.GetLogLevel())
 
-	router := gin.New()
-	router.Use(gin.Recovery()) // Recovery returns a middleware that recovers from any panics and writes a 500 if there was one.
+	if logLevelParseError != nil {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(logLevel)
+	}
+
+	mongoClient := db.NewMongoClient(&envConfig)
+	_, mongoConnectionError := mongoClient.Connect()
+	if mongoConnectionError != nil {
+		panic(mongoConnectionError)
+	}
+
+	emailRepository := repos.NewMongoEmailRepository(&mongoClient)
+	createEmailUseCase := usecases.NewCreateEmailUseCase(&emailRepository)
+	commitEmailUseCase := usecases.NewCommitEmailUseCase(&emailRepository)
+	deleteEmailUseCase := usecases.NewDeleteEmailUseCase(&emailRepository)
+	emailProvider := providers.NewFakeEmailProvider(&envConfig)
+	sendEmailsUseCase := usecases.NewSendEmailsUseCase(
+		&emailProvider,
+		&emailRepository,
+		&envConfig,
+	)
+
+	go sendEmailsUseCase.StartSending()
+
+	router := gin.Default()
 
 	endpoints.Setup(
 		router,
@@ -40,7 +57,7 @@ func Start() {
 		deleteEmailUseCase,
 	)
 
-	port := config.GetAppPort()
+	port := envConfig.GetAppPort()
 	err := endless.ListenAndServe(fmt.Sprintf(":%s", port), router)
 
 	if err != nil {

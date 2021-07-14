@@ -30,56 +30,63 @@ func getEnvValueAsStringOrDefault(key string, defaultValue string) string {
 type EnvConfig struct{}
 
 func NewEnvConfig() IConfig {
-	var config IConfig = &EnvConfig{}
-	return config
+	return &EnvConfig{}
 }
 
-func (config EnvConfig) GetRateLimitIntervalMs() int64 {
-	interval, err := strconv.ParseInt(getEnvValueAsStringOrDefault("RATE_LIMIT_INTERVAL_MS", "60000"), 10, 64)
+func (config *EnvConfig) GetLogLevel() string {
+	return getEnvValueAsStringOrDefault("LOG_LEVEL", "debug")
+}
+
+func (config *EnvConfig) GetSendSleepIntervalSec() int {
+	interval, err := strconv.ParseInt(getEnvValueAsStringOrDefault("SEND_SLEEP_INTERVAL_SECONDS", "60"), 10, 32)
 	if err != nil {
-		return 60000
+		return 60
 	}
-	return interval
+	return int(interval)
 }
 
-func (config EnvConfig) GetMaxEmailsPerInterval() int64 {
-	interval, err := strconv.ParseInt(getEnvValueAsStringOrDefault("MAX_EMAILS_PER_INTERVAL", "10"), 10, 64)
+func (config *EnvConfig) GetUnlockEmailsAfterSec() int {
+	interval, err := strconv.ParseInt(getEnvValueAsStringOrDefault("UNLOCK_EMAILS_AFTER_SECONDS", "300"), 10, 32)
 	if err != nil {
-		return 1000
+		return 300 // 5 mins
 	}
-	return interval
+	return int(interval)
 }
 
-func (config EnvConfig) GetAppPort() string {
+func (config *EnvConfig) GetAppPort() string {
 	return getEnvValueAsStringOrDefault("APP_PORT", "3000")
 }
 
-func (config EnvConfig) GetDatabseName() string {
+func (config *EnvConfig) GetDatabaseName() string {
 	return getEnvValueAsStringOrDefault("DB_NAME", "sandbox")
 }
 
-func (config EnvConfig) GetDatabaseUser() string {
+func (config *EnvConfig) GetDatabaseUser() string {
 	return getEnvValueAsStringOrDefault("DB_USER", "test")
 }
 
-func (config EnvConfig) GetDatabaseUserPassword() string {
+func (config *EnvConfig) GetDatabaseUserPassword() string {
 	return getEnvValueAsStringOrDefault("DB_USER_PASSWORD", "test")
 }
 
-func (config EnvConfig) GetDatabaseProtocol() string {
+func (config *EnvConfig) GetDatabaseProtocol() string {
 	return getEnvValueAsStringOrDefault("DB_PROTOCOL", "mongodb+srv")
 }
 
-func (config EnvConfig) GetDatabaseHost() string {
+func (config *EnvConfig) GetDatabaseHost() string {
 	return getEnvValueAsStringOrDefault("DB_HOST", "cluster0.ipkhc.mongodb.net")
 }
 
-func (config EnvConfig) GetDbUrl() string {
+func (config *EnvConfig) GetDbUrl() string {
 	dbProtocol := config.GetDatabaseProtocol()
 	dbUser := config.GetDatabaseUser()
 	dbPassword := config.GetDatabaseUserPassword()
 	dbHost := config.GetDatabaseHost()
-	dbName := config.GetDatabseName()
-	dbUrl := fmt.Sprintf("%s://%s:%s@%s/%s?retryWrites=true&w=majority", dbProtocol, dbUser, dbPassword, dbHost, dbName)
-	return dbUrl
+	dbName := config.GetDatabaseName()
+
+	if dbUser != "" && dbPassword != "" {
+		return fmt.Sprintf("%s://%s:%s@%s/%s?retryWrites=true&w=majority", dbProtocol, dbUser, dbPassword, dbHost, dbName)
+	}
+
+	return fmt.Sprintf("%s://%s/%s?retryWrites=true&w=majority", dbProtocol, dbHost, dbName)
 }

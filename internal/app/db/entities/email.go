@@ -8,6 +8,7 @@ import (
 
 type Email struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Provider    string             `bson:"provider" json:"provider"`
 	To          string             `bson:"to" json:"to"`
 	Cc          string             `bson:"cc" json:"cc"`
 	Subject     string             `bson:"subject" json:"subject"`

@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	emailrepository "github.com/quadgod/email-service-go/internal/app/db/repositories/email.repository"
-	usecases "github.com/quadgod/email-service-go/internal/app/domain/use-cases"
+	"github.com/quadgod/email-service-go/internal/app/db/repos"
+	"github.com/quadgod/email-service-go/internal/app/usecases"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -15,7 +15,7 @@ func BuildDeleteEmailHandler(deleteEmailUseCase usecases.IDeleteEmailUseCase) fu
 		err := deleteEmailUseCase.Delete(id)
 
 		if err != nil {
-			if err.Error() == emailrepository.ERROR_EMAIL_NOT_FOUND {
+			if err.Error() == repos.EmailNotFoundError {
 				log.Warn("[delete email]: Email not found")
 				c.JSON(http.StatusNotFound, gin.H{"error": "Email not found"})
 				return

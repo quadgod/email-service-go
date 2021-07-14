@@ -2,8 +2,8 @@ package endpoints
 
 import (
 	"github.com/gin-gonic/gin"
-	usecases "github.com/quadgod/email-service-go/internal/app/domain/use-cases"
 	"github.com/quadgod/email-service-go/internal/app/endpoints/handlers"
+	"github.com/quadgod/email-service-go/internal/app/usecases"
 )
 
 func Setup(

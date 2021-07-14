@@ -2,12 +2,13 @@ package config
 
 type IConfig interface {
 	GetAppPort() string
-	GetDatabseName() string
+	GetDatabaseName() string
 	GetDatabaseUser() string
 	GetDatabaseUserPassword() string
 	GetDatabaseProtocol() string
 	GetDatabaseHost() string
 	GetDbUrl() string
-	GetRateLimitIntervalMs() int64
-	GetMaxEmailsPerInterval() int64
+	GetSendSleepIntervalSec() int
+	GetUnlockEmailsAfterSec() int
+	GetLogLevel() string
 }

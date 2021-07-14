@@ -5,6 +5,7 @@ Content-Type: application/json
 {
   "to": "to@test.com",
   "cc": "cc@test.com",
+  "provider": "internal",
   "subject": "subject",
   "body": "<b>test</b>",
   "type": "html"
