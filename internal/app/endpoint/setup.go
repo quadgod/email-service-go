@@ -1,16 +1,16 @@
-package endpoints
+package endpoint
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/quadgod/email-service-go/internal/app/endpoints/handlers"
-	"github.com/quadgod/email-service-go/internal/app/usecases"
+	"github.com/quadgod/email-service-go/internal/app/endpoint/handlers"
+	"github.com/quadgod/email-service-go/internal/app/usecase"
 )
 
 func Setup(
 	router *gin.Engine,
-	createEmailUseCase usecases.ICreateEmailUseCase,
-	commitEmailUseCase usecases.ICommitEmailUseCase,
-	deleteEmailUseCase usecases.IDeleteEmailUseCase,
+	createEmailUseCase usecase.ICreateEmailUseCase,
+	commitEmailUseCase usecase.ICommitEmailUseCase,
+	deleteEmailUseCase usecase.IDeleteEmailUseCase,
 ) {
 	router.POST("/", handlers.BuildCreateEmailHandler(createEmailUseCase))
 	router.PATCH("/:id/commit", handlers.BuildCommitEmailHandler(commitEmailUseCase))

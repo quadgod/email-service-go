@@ -1,4 +1,4 @@
-package entities
+package entity
 
 import (
 	"time"
@@ -8,7 +8,7 @@ import (
 
 type Email struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Provider    string             `bson:"provider" json:"provider"`
+	Provider    string             `bson:"email" json:"email"`
 	To          string             `bson:"to" json:"to"`
 	Cc          string             `bson:"cc" json:"cc"`
 	Subject     string             `bson:"subject" json:"subject"`

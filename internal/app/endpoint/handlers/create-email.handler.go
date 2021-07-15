@@ -4,13 +4,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/quadgod/email-service-go/internal/app/usecases"
+	"github.com/quadgod/email-service-go/internal/app/usecase"
 	log "github.com/sirupsen/logrus"
 )
 
-func BuildCreateEmailHandler(createEmailUseCase usecases.ICreateEmailUseCase) func(c *gin.Context) {
+func BuildCreateEmailHandler(createEmailUseCase usecase.ICreateEmailUseCase) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		var payload usecases.CreateEmailDTO
+		var payload usecase.CreateEmailDTO
 
 		if err := c.ShouldBindJSON(&payload); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

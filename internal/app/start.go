@@ -2,16 +2,16 @@ package app
 
 import (
 	"fmt"
-	"github.com/quadgod/email-service-go/internal/app/providers"
+	"github.com/quadgod/email-service-go/internal/app/email"
 	"os"
 
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
 	"github.com/quadgod/email-service-go/internal/app/config"
 	"github.com/quadgod/email-service-go/internal/app/db"
-	"github.com/quadgod/email-service-go/internal/app/db/repos"
-	"github.com/quadgod/email-service-go/internal/app/endpoints"
-	"github.com/quadgod/email-service-go/internal/app/usecases"
+	"github.com/quadgod/email-service-go/internal/app/db/repository"
+	"github.com/quadgod/email-service-go/internal/app/endpoint"
+	"github.com/quadgod/email-service-go/internal/app/usecase"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -35,22 +35,27 @@ func Start() {
 		panic(mongoConnectionError)
 	}
 
-	emailRepository := repos.NewMongoEmailRepository(&mongoClient)
-	createEmailUseCase := usecases.NewCreateEmailUseCase(&emailRepository)
-	commitEmailUseCase := usecases.NewCommitEmailUseCase(&emailRepository)
-	deleteEmailUseCase := usecases.NewDeleteEmailUseCase(&emailRepository)
-	emailProvider := providers.NewFakeEmailProvider(&envConfig)
-	sendEmailsUseCase := usecases.NewSendEmailsUseCase(
-		&emailProvider,
+	emailRepository := repository.NewMongoEmailRepository(&mongoClient)
+	createEmailUseCase := usecase.NewCreateEmailUseCase(&emailRepository)
+	commitEmailUseCase := usecase.NewCommitEmailUseCase(&emailRepository)
+	deleteEmailUseCase := usecase.NewDeleteEmailUseCase(&emailRepository)
+	emailProviderFactory := email.NewFactory(&envConfig)
+	sendEmailsUseCase := usecase.NewSendEmailsUseCase(
+		&emailProviderFactory,
+		&emailRepository,
+		&envConfig,
+	)
+	unlockEmailsUseCase := usecase.NewUnlockEmailsUseCase(
 		&emailRepository,
 		&envConfig,
 	)
 
-	go sendEmailsUseCase.StartSending()
+	go sendEmailsUseCase.Start()
+	go unlockEmailsUseCase.Start()
 
 	router := gin.Default()
 
-	endpoints.Setup(
+	endpoint.Setup(
 		router,
 		createEmailUseCase,
 		commitEmailUseCase,

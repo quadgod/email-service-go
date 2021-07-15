@@ -4,18 +4,18 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/quadgod/email-service-go/internal/app/db/repos"
-	"github.com/quadgod/email-service-go/internal/app/usecases"
+	"github.com/quadgod/email-service-go/internal/app/db/repository"
+	"github.com/quadgod/email-service-go/internal/app/usecase"
 	log "github.com/sirupsen/logrus"
 )
 
-func BuildCommitEmailHandler(commitEmailUseCase usecases.ICommitEmailUseCase) func(c *gin.Context) {
+func BuildCommitEmailHandler(commitEmailUseCase usecase.ICommitEmailUseCase) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		email, err := commitEmailUseCase.Commit(id)
 
 		if err != nil {
-			if err.Error() == repos.EmailNotFoundError {
+			if err.Error() == repository.EmailNotFoundError {
 				log.Warn("[commit email]: Email not found")
 				c.JSON(http.StatusNotFound, gin.H{"error": "Email not found"})
 				return

@@ -1,4 +1,4 @@
-package repos
+package repository
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/quadgod/email-service-go/internal/app/db"
-	"github.com/quadgod/email-service-go/internal/app/db/entities"
+	"github.com/quadgod/email-service-go/internal/app/db/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,11 +16,11 @@ import (
 const EmailNotFoundError = "EMAIL_NOT_FOUND_ERROR"
 
 type IEmailRepository interface {
-	Insert(email *entities.Email) (*entities.Email, error)
-	Commit(id string) (*entities.Email, error)
+	Insert(email *entity.Email) (*entity.Email, error)
+	Commit(id string) (*entity.Email, error)
 	Delete(id string) error
-	GetEmailForSend() (*entities.Email, error)
-	MarkEmailAsSent(id string) (*entities.Email, error)
+	GetEmailForSend() (*entity.Email, error)
+	MarkEmailAsSent(id string) (*entity.Email, error)
 	UnlockEmails() (int64, error)
 }
 
@@ -86,7 +86,7 @@ func (instance *MongoEmailRepository) UnlockEmails() (int64, error) {
 	return updateResult.ModifiedCount, nil
 }
 
-func (instance *MongoEmailRepository) GetEmailForSend() (*entities.Email, error) {
+func (instance *MongoEmailRepository) GetEmailForSend() (*entity.Email, error) {
 	emailsCollection, dbErr := getEmailsCollection(instance.client)
 	if dbErr != nil {
 		return nil, dbErr
@@ -121,7 +121,7 @@ func (instance *MongoEmailRepository) GetEmailForSend() (*entities.Email, error)
 		return nil, updateResult.Err()
 	}
 
-	var email *entities.Email
+	var email *entity.Email
 	decodeErr := updateResult.Decode(&email)
 
 	if decodeErr != nil {
@@ -158,7 +158,7 @@ func (instance *MongoEmailRepository) Delete(id string) error {
 	return nil
 }
 
-func (instance *MongoEmailRepository) Commit(id string) (*entities.Email, error) {
+func (instance *MongoEmailRepository) Commit(id string) (*entity.Email, error) {
 	emailsCollection, dbErr := getEmailsCollection(instance.client)
 	if dbErr != nil {
 		return nil, dbErr
@@ -193,7 +193,7 @@ func (instance *MongoEmailRepository) Commit(id string) (*entities.Email, error)
 		return nil, updateResult.Err()
 	}
 
-	var email *entities.Email
+	var email *entity.Email
 	decodeErr := updateResult.Decode(&email)
 
 	if decodeErr != nil {
@@ -203,7 +203,7 @@ func (instance *MongoEmailRepository) Commit(id string) (*entities.Email, error)
 	return email, nil
 }
 
-func (instance *MongoEmailRepository) Insert(newEmail *entities.Email) (*entities.Email, error) {
+func (instance *MongoEmailRepository) Insert(newEmail *entity.Email) (*entity.Email, error) {
 	emailsCollection, dbErr := getEmailsCollection(instance.client)
 	if dbErr != nil {
 		return nil, dbErr
@@ -215,7 +215,7 @@ func (instance *MongoEmailRepository) Insert(newEmail *entities.Email) (*entitie
 		return nil, insertErr
 	}
 
-	var email *entities.Email
+	var email *entity.Email
 	result := emailsCollection.FindOne(context.TODO(), bson.M{"_id": insertResult.InsertedID})
 
 	if result.Err() != nil {
@@ -231,7 +231,7 @@ func (instance *MongoEmailRepository) Insert(newEmail *entities.Email) (*entitie
 	return email, nil
 }
 
-func (instance *MongoEmailRepository) MarkEmailAsSent(id string) (*entities.Email, error) {
+func (instance *MongoEmailRepository) MarkEmailAsSent(id string) (*entity.Email, error) {
 	emailsCollection, dbErr := getEmailsCollection(instance.client)
 	if dbErr != nil {
 		return nil, dbErr
@@ -262,7 +262,7 @@ func (instance *MongoEmailRepository) MarkEmailAsSent(id string) (*entities.Emai
 		return nil, updateResult.Err()
 	}
 
-	var email *entities.Email
+	var email *entity.Email
 	decodeErr := updateResult.Decode(&email)
 
 	if decodeErr != nil {
