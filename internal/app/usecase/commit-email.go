@@ -1,12 +1,13 @@
 package usecase
 
 import (
+	"context"
 	"github.com/quadgod/email-service-go/internal/app/db/entity"
 	"github.com/quadgod/email-service-go/internal/app/db/repository"
 )
 
 type ICommitEmailUseCase interface {
-	Commit(id string) (*entity.Email, error)
+	Commit(ctx context.Context, id string) (*entity.Email, error)
 }
 
 type CommitEmailUseCase struct {
@@ -19,7 +20,7 @@ func NewCommitEmailUseCase(emailRepository *repository.IEmailRepository) ICommit
 	}
 }
 
-func (instance *CommitEmailUseCase) Commit(id string) (*entity.Email, error) {
-	entity, err := (*instance.emailRepository).Commit(id)
-	return entity, err
+func (instance *CommitEmailUseCase) Commit(ctx context.Context, id string) (*entity.Email, error) {
+	email, err := (*instance.emailRepository).Commit(ctx, id)
+	return email, err
 }

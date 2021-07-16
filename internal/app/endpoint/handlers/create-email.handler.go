@@ -17,7 +17,7 @@ func BuildCreateEmailHandler(createEmailUseCase usecase.ICreateEmailUseCase) fun
 			return
 		}
 
-		email, createErr := createEmailUseCase.Create(&payload)
+		email, createErr := createEmailUseCase.Create(c, &payload)
 
 		if createErr != nil {
 			log.Error("[create email]: Internal server error", createErr.Error())

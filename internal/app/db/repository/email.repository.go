@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/quadgod/email-service-go/internal/app/db"
 	"github.com/quadgod/email-service-go/internal/app/db/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,46 +13,30 @@ import (
 )
 
 const EmailNotFoundError = "EMAIL_NOT_FOUND_ERROR"
+const mongoNoDocumentsInResultError = "mongo: no documents in result"
 
 type IEmailRepository interface {
-	Insert(email *entity.Email) (*entity.Email, error)
-	Commit(id string) (*entity.Email, error)
-	Delete(id string) error
-	GetEmailForSend() (*entity.Email, error)
-	MarkEmailAsSent(id string) (*entity.Email, error)
-	UnlockEmails() (int64, error)
+	Insert(ctx context.Context, email *entity.Email) (*entity.Email, error)
+	Commit(ctx context.Context, id string) (*entity.Email, error)
+	Delete(ctx context.Context, id string) error
+	GetForSend(ctx context.Context) (*entity.Email, error)
+	MarkAsSent(ctx context.Context, id string) (*entity.Email, error)
+	Unlock(ctx context.Context) (int64, error)
 }
 
 type MongoEmailRepository struct {
-	client *db.IMongoClient
+	emailsCollection *mongo.Collection
 }
 
-const MongoNoDocumentsInResultError = "mongo: no documents in result"
-
-func NewMongoEmailRepository(client *db.IMongoClient) IEmailRepository {
+func NewMongoEmailRepository(emailsCollection *mongo.Collection) IEmailRepository {
 	return &MongoEmailRepository{
-		client,
+		emailsCollection,
 	}
 }
 
-func getEmailsCollection(client *db.IMongoClient) (*mongo.Collection, error) {
-	database, dbErr := (*client).GetDatabase()
-	if dbErr != nil {
-		return nil, dbErr
-	}
-
-	emailsCollection := database.Collection("emails")
-	return emailsCollection, nil
-}
-
-func (instance *MongoEmailRepository) UnlockEmails() (int64, error) {
-	emailsCollection, dbErr := getEmailsCollection(instance.client)
-	if dbErr != nil {
-		return 0, dbErr
-	}
-
-	updateResult, err := emailsCollection.UpdateMany(
-		context.TODO(),
+func (m *MongoEmailRepository) Unlock(ctx context.Context) (int64, error) {
+	updateResult, err := m.emailsCollection.UpdateMany(
+		ctx,
 		bson.M{
 			"$and": bson.A{
 				bson.M{"lockedAt": bson.M{"$exists": true}},
@@ -86,18 +69,14 @@ func (instance *MongoEmailRepository) UnlockEmails() (int64, error) {
 	return updateResult.ModifiedCount, nil
 }
 
-func (instance *MongoEmailRepository) GetEmailForSend() (*entity.Email, error) {
-	emailsCollection, dbErr := getEmailsCollection(instance.client)
-	if dbErr != nil {
-		return nil, dbErr
-	}
-
+func (m *MongoEmailRepository) GetForSend(ctx context.Context) (*entity.Email, error) {
 	after := options.After
 	opt := options.FindOneAndUpdateOptions{
 		ReturnDocument: &after, // Return new document after update
 	}
 
-	updateResult := emailsCollection.FindOneAndUpdate(context.TODO(),
+	updateResult := m.emailsCollection.FindOneAndUpdate(
+		ctx,
 		bson.M{
 			"$or": bson.A{
 				bson.M{"lockedAt": bson.M{"$exists": false}},
@@ -114,7 +93,7 @@ func (instance *MongoEmailRepository) GetEmailForSend() (*entity.Email, error) {
 	)
 
 	if updateResult.Err() != nil {
-		if updateResult.Err().Error() == MongoNoDocumentsInResultError {
+		if updateResult.Err().Error() == mongoNoDocumentsInResultError {
 			return nil, errors.New(EmailNotFoundError)
 		}
 
@@ -131,14 +110,10 @@ func (instance *MongoEmailRepository) GetEmailForSend() (*entity.Email, error) {
 	return email, nil
 }
 
-func (instance *MongoEmailRepository) Delete(id string) error {
-	emailsCollection, dbErr := getEmailsCollection(instance.client)
-	if dbErr != nil {
-		return dbErr
-	}
-
+func (m *MongoEmailRepository) Delete(ctx context.Context, id string) error {
 	objId, _ := primitive.ObjectIDFromHex(id)
-	deleteResult, deleteErr := emailsCollection.DeleteOne(context.TODO(),
+	deleteResult, deleteErr := m.emailsCollection.DeleteOne(
+		ctx,
 		bson.M{
 			"_id": objId,
 			"readyToSend": bson.M{
@@ -158,19 +133,15 @@ func (instance *MongoEmailRepository) Delete(id string) error {
 	return nil
 }
 
-func (instance *MongoEmailRepository) Commit(id string) (*entity.Email, error) {
-	emailsCollection, dbErr := getEmailsCollection(instance.client)
-	if dbErr != nil {
-		return nil, dbErr
-	}
-
+func (m *MongoEmailRepository) Commit(ctx context.Context, id string) (*entity.Email, error) {
 	after := options.After
 	opt := options.FindOneAndUpdateOptions{
 		ReturnDocument: &after, // Return new document after update
 	}
 
 	objId, _ := primitive.ObjectIDFromHex(id)
-	updateResult := emailsCollection.FindOneAndUpdate(context.TODO(),
+	updateResult := m.emailsCollection.FindOneAndUpdate(
+		ctx,
 		bson.M{
 			"_id": objId,
 			"readyToSend": bson.M{
@@ -186,7 +157,7 @@ func (instance *MongoEmailRepository) Commit(id string) (*entity.Email, error) {
 		&opt)
 
 	if updateResult.Err() != nil {
-		if updateResult.Err().Error() == MongoNoDocumentsInResultError {
+		if updateResult.Err().Error() == mongoNoDocumentsInResultError {
 			return nil, errors.New(EmailNotFoundError)
 		}
 
@@ -203,20 +174,15 @@ func (instance *MongoEmailRepository) Commit(id string) (*entity.Email, error) {
 	return email, nil
 }
 
-func (instance *MongoEmailRepository) Insert(newEmail *entity.Email) (*entity.Email, error) {
-	emailsCollection, dbErr := getEmailsCollection(instance.client)
-	if dbErr != nil {
-		return nil, dbErr
-	}
-
-	insertResult, insertErr := emailsCollection.InsertOne(context.TODO(), newEmail)
+func (m *MongoEmailRepository) Insert(ctx context.Context, newEmail *entity.Email) (*entity.Email, error) {
+	insertResult, insertErr := m.emailsCollection.InsertOne(ctx, newEmail)
 
 	if insertErr != nil {
 		return nil, insertErr
 	}
 
 	var email *entity.Email
-	result := emailsCollection.FindOne(context.TODO(), bson.M{"_id": insertResult.InsertedID})
+	result := m.emailsCollection.FindOne(ctx, bson.M{"_id": insertResult.InsertedID})
 
 	if result.Err() != nil {
 		return nil, result.Err()
@@ -231,19 +197,15 @@ func (instance *MongoEmailRepository) Insert(newEmail *entity.Email) (*entity.Em
 	return email, nil
 }
 
-func (instance *MongoEmailRepository) MarkEmailAsSent(id string) (*entity.Email, error) {
-	emailsCollection, dbErr := getEmailsCollection(instance.client)
-	if dbErr != nil {
-		return nil, dbErr
-	}
-
+func (m *MongoEmailRepository) MarkAsSent(ctx context.Context, id string) (*entity.Email, error) {
 	after := options.After
 	opt := options.FindOneAndUpdateOptions{
 		ReturnDocument: &after, // Return new document after update
 	}
 
 	objId, _ := primitive.ObjectIDFromHex(id)
-	updateResult := emailsCollection.FindOneAndUpdate(context.TODO(),
+	updateResult := m.emailsCollection.FindOneAndUpdate(
+		ctx,
 		bson.M{
 			"_id": objId,
 		},
@@ -255,7 +217,7 @@ func (instance *MongoEmailRepository) MarkEmailAsSent(id string) (*entity.Email,
 		&opt)
 
 	if updateResult.Err() != nil {
-		if updateResult.Err().Error() == MongoNoDocumentsInResultError {
+		if updateResult.Err().Error() == mongoNoDocumentsInResultError {
 			return nil, errors.New(EmailNotFoundError)
 		}
 

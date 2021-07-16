@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"github.com/quadgod/email-service-go/internal/app/config"
 	"github.com/quadgod/email-service-go/internal/app/db/entity"
 	"github.com/quadgod/email-service-go/internal/app/db/repository"
@@ -15,7 +16,7 @@ type ISendEmailsUseCase interface {
 }
 
 type SendEmailsUseCase struct {
-	providerFactory     *eml.IProviderFactory
+	providerFactory *eml.IProviderFactory
 	emailRepository *repository.IEmailRepository
 	config          *config.IConfig
 }
@@ -50,7 +51,7 @@ func (s *SendEmailsUseCase) sendEmail(sending *sync.WaitGroup, email *entity.Ema
 		return
 	}
 
-	email, markError := (*s.emailRepository).MarkEmailAsSent(email.ID.String())
+	email, markError := (*s.emailRepository).MarkAsSent(context.TODO(), email.ID.String())
 	if markError != nil {
 		if markError.Error() == repository.EmailNotFoundError {
 			log.Error("Mark email as sent error: Email not found")
@@ -69,7 +70,7 @@ func (s *SendEmailsUseCase) sendEmails(allDone *sync.WaitGroup) {
 	var sending sync.WaitGroup
 
 	for {
-		email, err := (*s.emailRepository).GetEmailForSend()
+		email, err := (*s.emailRepository).GetForSend(context.TODO())
 		if err != nil {
 			if err.Error() == repository.EmailNotFoundError {
 				log.Info("No emails for send found")

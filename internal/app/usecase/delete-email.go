@@ -1,9 +1,12 @@
 package usecase
 
-import "github.com/quadgod/email-service-go/internal/app/db/repository"
+import (
+	"context"
+	"github.com/quadgod/email-service-go/internal/app/db/repository"
+)
 
 type IDeleteEmailUseCase interface {
-	Delete(id string) error
+	Delete(ctx context.Context, id string) error
 }
 
 type DeleteEmailUseCase struct {
@@ -16,7 +19,7 @@ func NewDeleteEmailUseCase(emailRepository *repository.IEmailRepository) IDelete
 	}
 }
 
-func (instance DeleteEmailUseCase) Delete(id string) error {
-	err := (*instance.emailRepository).Delete(id)
+func (instance DeleteEmailUseCase) Delete(ctx context.Context, id string) error {
+	err := (*instance.emailRepository).Delete(ctx, id)
 	return err
 }

@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"time"
 
 	"github.com/quadgod/email-service-go/internal/app/db/entity"
@@ -8,16 +9,17 @@ import (
 )
 
 type CreateEmailDTO struct {
+	Provider string `json:"provider" binding:"required,oneof=fake emarsys"`
 	To       string `json:"to" binding:"required,email"`
-	Provider string `json:"email" binding:"required,oneof=internal emarsys"`
 	Cc       string `json:"cc" binding:"email"`
+	From	 string `json:"from"`
 	Subject  string `json:"subject" binding:"required"`
 	Body     string `json:"body" binding:"required"`
 	Type     string `json:"type" binding:"required,oneof=html text"`
 }
 
 type ICreateEmailUseCase interface {
-	Create(payload *CreateEmailDTO) (*entity.Email, error)
+	Create(ctx context.Context, payload *CreateEmailDTO) (*entity.Email, error)
 }
 
 type CreateEmailUseCase struct {
@@ -30,13 +32,14 @@ func NewCreateEmailUseCase(emailRepository *repository.IEmailRepository) ICreate
 	}
 }
 
-func (instance *CreateEmailUseCase) Create(payload *CreateEmailDTO) (*entity.Email, error) {
+func (instance *CreateEmailUseCase) Create(ctx context.Context, payload *CreateEmailDTO) (*entity.Email, error) {
 	var now = time.Now()
 
 	newEmail := entity.Email{
 		Provider:    payload.Provider,
 		To:          payload.To,
 		Cc:          payload.Cc,
+		From:		 payload.From,
 		Subject:     payload.Subject,
 		Body:        payload.Body,
 		Type:        payload.Type,
@@ -48,6 +51,6 @@ func (instance *CreateEmailUseCase) Create(payload *CreateEmailDTO) (*entity.Ema
 		ReadyToSend: false,
 	}
 
-	entity, err := (*instance.emailRepository).Insert(&newEmail)
-	return entity, err
+	email, err := (*instance.emailRepository).Insert(ctx, &newEmail)
+	return email, err
 }

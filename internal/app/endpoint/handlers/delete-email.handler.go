@@ -12,7 +12,7 @@ import (
 func BuildDeleteEmailHandler(deleteEmailUseCase usecase.IDeleteEmailUseCase) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		err := deleteEmailUseCase.Delete(id)
+		err := deleteEmailUseCase.Delete(c, id)
 
 		if err != nil {
 			if err.Error() == repository.EmailNotFoundError {

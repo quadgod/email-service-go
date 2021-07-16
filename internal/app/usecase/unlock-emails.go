@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"github.com/quadgod/email-service-go/internal/app/config"
 	"github.com/quadgod/email-service-go/internal/app/db/repository"
 	log "github.com/sirupsen/logrus"
@@ -29,7 +30,7 @@ func NewUnlockEmailsUseCase(
 
 func unlockEmails(allDone *sync.WaitGroup, emailRepository repository.IEmailRepository) {
 	defer allDone.Done()
-	unlockedCount, err := emailRepository.UnlockEmails()
+	unlockedCount, err := emailRepository.Unlock(context.TODO())
 	if err != nil {
 		log.Errorf("Unlock emails error: %s", err.Error())
 	} else {

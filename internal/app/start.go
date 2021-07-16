@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"github.com/quadgod/email-service-go/internal/app/email"
 	"os"
@@ -29,13 +30,19 @@ func Start() {
 		log.SetLevel(logLevel)
 	}
 
-	mongoClient := db.NewMongoClient(&envConfig)
-	_, mongoConnectionError := mongoClient.Connect()
-	if mongoConnectionError != nil {
-		panic(mongoConnectionError)
+	client, err := db.CreateMongoClient(&envConfig)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	emailRepository := repository.NewMongoEmailRepository(&mongoClient)
+	connectedClient, err := db.ConnectMongoClient(context.Background(), client)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	emailsCollection := db.GetEmailsCollection(connectedClient, &envConfig)
+
+	emailRepository := repository.NewMongoEmailRepository(emailsCollection)
 	createEmailUseCase := usecase.NewCreateEmailUseCase(&emailRepository)
 	commitEmailUseCase := usecase.NewCommitEmailUseCase(&emailRepository)
 	deleteEmailUseCase := usecase.NewDeleteEmailUseCase(&emailRepository)
@@ -63,10 +70,10 @@ func Start() {
 	)
 
 	port := envConfig.GetAppPort()
-	err := endless.ListenAndServe(fmt.Sprintf(":%s", port), router)
+	listenError := endless.ListenAndServe(fmt.Sprintf(":%s", port), router)
 
-	if err != nil {
-		log.Fatal(err)
+	if listenError != nil {
+		log.Fatal(listenError)
 	}
 
 	log.Println("Email service stopped")

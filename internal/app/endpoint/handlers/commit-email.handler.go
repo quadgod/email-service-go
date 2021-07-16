@@ -12,7 +12,7 @@ import (
 func BuildCommitEmailHandler(commitEmailUseCase usecase.ICommitEmailUseCase) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		email, err := commitEmailUseCase.Commit(id)
+		email, err := commitEmailUseCase.Commit(c, id)
 
 		if err != nil {
 			if err.Error() == repository.EmailNotFoundError {
