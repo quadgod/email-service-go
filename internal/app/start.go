@@ -43,18 +43,18 @@ func Start() {
 	emailsCollection := db.GetEmailsCollection(connectedClient, &envConfig)
 
 	emailRepository := repository.NewMongoEmailRepository(emailsCollection)
-	createEmailUseCase := usecase.NewCreateEmailUseCase(&emailRepository)
-	commitEmailUseCase := usecase.NewCommitEmailUseCase(&emailRepository)
-	deleteEmailUseCase := usecase.NewDeleteEmailUseCase(&emailRepository)
+	createEmailUseCase := usecase.NewCreateEmailUseCase(emailRepository)
+	commitEmailUseCase := usecase.NewCommitEmailUseCase(emailRepository)
+	deleteEmailUseCase := usecase.NewDeleteEmailUseCase(emailRepository)
 	emailProviderFactory := email.NewFactory(&envConfig)
 	sendEmailsUseCase := usecase.NewSendEmailsUseCase(
-		&emailProviderFactory,
-		&emailRepository,
-		&envConfig,
+		emailProviderFactory,
+		emailRepository,
+		envConfig,
 	)
 	unlockEmailsUseCase := usecase.NewUnlockEmailsUseCase(
-		&emailRepository,
-		&envConfig,
+		emailRepository,
+		envConfig,
 	)
 
 	go sendEmailsUseCase.Start()

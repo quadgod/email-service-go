@@ -14,21 +14,21 @@ type IUnlockEmailsUseCase interface {
 }
 
 type UnlockEmailsUseCase struct {
-	emailRepository *repository.IEmailRepository
-	config          *config.IConfig
+	emailRepository *repository.EmailRepository
+	config          *config.Config
 }
 
 func NewUnlockEmailsUseCase(
-	emailRepository *repository.IEmailRepository,
-	config *config.IConfig,
+	emailRepository repository.EmailRepository,
+	config config.Config,
 ) IUnlockEmailsUseCase {
 	return &UnlockEmailsUseCase{
-		emailRepository: emailRepository,
-		config:          config,
+		emailRepository: &emailRepository,
+		config:          &config,
 	}
 }
 
-func unlockEmails(allDone *sync.WaitGroup, emailRepository repository.IEmailRepository) {
+func unlockEmails(allDone *sync.WaitGroup, emailRepository repository.EmailRepository) {
 	defer allDone.Done()
 	unlockedCount, err := emailRepository.Unlock(context.TODO())
 	if err != nil {

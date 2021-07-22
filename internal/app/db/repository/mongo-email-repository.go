@@ -15,23 +15,18 @@ import (
 const EmailNotFoundError = "EMAIL_NOT_FOUND_ERROR"
 const mongoNoDocumentsInResultError = "mongo: no documents in result"
 
-type IEmailRepository interface {
-	Insert(ctx context.Context, email *entity.Email) (*entity.Email, error)
-	Commit(ctx context.Context, id string) (*entity.Email, error)
-	Delete(ctx context.Context, id string) error
-	GetForSend(ctx context.Context) (*entity.Email, error)
-	MarkAsSent(ctx context.Context, id string) (*entity.Email, error)
-	Unlock(ctx context.Context) (int64, error)
-}
-
 type MongoEmailRepository struct {
 	emailsCollection *mongo.Collection
 }
 
-func NewMongoEmailRepository(emailsCollection *mongo.Collection) IEmailRepository {
+func NewMongoEmailRepository(emailsCollection *mongo.Collection) EmailRepository {
 	return &MongoEmailRepository{
 		emailsCollection,
 	}
+}
+
+func (m *MongoEmailRepository) GetTimeNow() time.Time {
+	return time.Now().Local()
 }
 
 func (m *MongoEmailRepository) Unlock(ctx context.Context) (int64, error) {
@@ -50,7 +45,7 @@ func (m *MongoEmailRepository) Unlock(ctx context.Context) (int64, error) {
 				bson.D{
 					{"readyToSend", true},
 					{"lockedAt", bson.M{
-						"$lt": time.Now().Local().Add(-5 * time.Minute)},
+						"$lt": m.GetTimeNow().Add(-5 * time.Minute)},
 					},
 				},
 			},
@@ -86,7 +81,7 @@ func (m *MongoEmailRepository) GetForSend(ctx context.Context) (*entity.Email, e
 		},
 		bson.M{
 			"$set": bson.M{
-				"lockedAt": time.Now().Local(),
+				"lockedAt": m.GetTimeNow(),
 			},
 		},
 		&opt,
@@ -151,7 +146,7 @@ func (m *MongoEmailRepository) Commit(ctx context.Context, id string) (*entity.E
 		bson.M{
 			"$set": bson.M{
 				"readyToSend": true,
-				"committedAt": time.Now().Local(),
+				"committedAt": m.GetTimeNow(),
 			},
 		},
 		&opt)
@@ -211,7 +206,7 @@ func (m *MongoEmailRepository) MarkAsSent(ctx context.Context, id string) (*enti
 		},
 		bson.M{
 			"$set": bson.M{
-				"sentAt": time.Now(),
+				"sentAt": m.GetTimeNow(),
 			},
 		},
 		&opt)

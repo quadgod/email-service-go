@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func CreateMongoClient(config *config.IConfig) (*mongo.Client, error) {
+func CreateMongoClient(config *config.Config) (*mongo.Client, error) {
 	opts := options.
 		Client().
 		SetMaxPoolSize(50).

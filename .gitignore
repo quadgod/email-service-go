@@ -1,3 +1,5 @@
 bin/
 .env
 *.log
+cover.out
+cover.html

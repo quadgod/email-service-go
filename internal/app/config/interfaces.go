@@ -1,6 +1,6 @@
 package config
 
-type IConfig interface {
+type Config interface {
 	GetAppPort() string
 	GetDatabaseName() string
 	GetDatabaseUser() string

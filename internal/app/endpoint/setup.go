@@ -12,7 +12,7 @@ func Setup(
 	commitEmailUseCase usecase.ICommitEmailUseCase,
 	deleteEmailUseCase usecase.IDeleteEmailUseCase,
 ) {
-	router.POST("/", handlers.BuildCreateEmailHandler(createEmailUseCase))
-	router.PATCH("/:id/commit", handlers.BuildCommitEmailHandler(commitEmailUseCase))
-	router.DELETE("/:id", handlers.BuildDeleteEmailHandler(deleteEmailUseCase))
+	router.POST("/", handlers.NewCreateEmailHandler(createEmailUseCase))
+	router.PATCH("/:id/commit", handlers.NewCommitEmailHandler(commitEmailUseCase))
+	router.DELETE("/:id", handlers.NewDeleteEmailHandler(deleteEmailUseCase))
 }

@@ -11,10 +11,10 @@ import (
 )
 
 type FakeProvider struct {
-	config *config.IConfig
+	config *config.Config
 }
 
-func NewFakeProvider(config *config.IConfig) IEmailProvider {
+func NewFakeProvider(config *config.Config) Provider {
 	return &FakeProvider{
 		config,
 	}

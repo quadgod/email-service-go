@@ -16,20 +16,20 @@ type ISendEmailsUseCase interface {
 }
 
 type SendEmailsUseCase struct {
-	providerFactory *eml.IProviderFactory
-	emailRepository *repository.IEmailRepository
-	config          *config.IConfig
+	providerFactory *eml.ProvidersFactory
+	emailRepository *repository.EmailRepository
+	config          *config.Config
 }
 
 func NewSendEmailsUseCase(
-	providerFactory *eml.IProviderFactory,
-	emailRepository *repository.IEmailRepository,
-	config *config.IConfig,
+	providerFactory eml.ProvidersFactory,
+	emailRepository repository.EmailRepository,
+	config config.Config,
 ) ISendEmailsUseCase {
 	return &SendEmailsUseCase{
-		providerFactory,
-		emailRepository,
-		config,
+		&providerFactory,
+		&emailRepository,
+		&config,
 	}
 }
 

@@ -9,25 +9,23 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func BuildDeleteEmailHandler(deleteEmailUseCase usecase.IDeleteEmailUseCase) func(c *gin.Context) {
+func NewCommitEmailHandler(commitEmailUseCase usecase.ICommitEmailUseCase) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		err := deleteEmailUseCase.Delete(c, id)
+		email, err := commitEmailUseCase.Commit(c, id)
 
 		if err != nil {
 			if err.Error() == repository.EmailNotFoundError {
-				log.Warn("[delete email]: Email not found")
+				log.Warn("[commit email]: Email not found")
 				c.JSON(http.StatusNotFound, gin.H{"error": "Email not found"})
 				return
 			}
 
-			log.Error("[delete email]: Internal server error", err.Error())
+			log.Error("[commit email]: Internal server error", err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"deleted": 1,
-		})
+		c.JSON(http.StatusOK, email)
 	}
 }

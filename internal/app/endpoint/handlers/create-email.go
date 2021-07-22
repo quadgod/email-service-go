@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func BuildCreateEmailHandler(createEmailUseCase usecase.ICreateEmailUseCase) func(c *gin.Context) {
+func NewCreateEmailHandler(createEmailUseCase usecase.ICreateEmailUseCase) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var payload usecase.CreateEmailDTO
 

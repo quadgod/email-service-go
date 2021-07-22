@@ -11,12 +11,12 @@ type ICommitEmailUseCase interface {
 }
 
 type CommitEmailUseCase struct {
-	emailRepository *repository.IEmailRepository
+	emailRepository *repository.EmailRepository
 }
 
-func NewCommitEmailUseCase(emailRepository *repository.IEmailRepository) ICommitEmailUseCase {
+func NewCommitEmailUseCase(emailRepository repository.EmailRepository) ICommitEmailUseCase {
 	return &CommitEmailUseCase{
-		emailRepository,
+		&emailRepository,
 	}
 }
 

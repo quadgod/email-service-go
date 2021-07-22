@@ -29,7 +29,7 @@ func getEnvValueAsStringOrDefault(key string, defaultValue string) string {
 
 type EnvConfig struct{}
 
-func NewEnvConfig() IConfig {
+func NewEnvConfig() Config {
 	return &EnvConfig{}
 }
 

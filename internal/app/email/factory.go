@@ -3,26 +3,17 @@ package email
 import (
 	"errors"
 	"github.com/quadgod/email-service-go/internal/app/config"
-	"github.com/quadgod/email-service-go/internal/app/db/entity"
 )
 
-type IEmailProvider interface {
-	Send(email *entity.Email) error
-}
-
-type IProviderFactory interface {
-	GetProviderByName(providerName string) (IEmailProvider, error)
-}
-
 type ProviderFactory struct {
-	config *config.IConfig
+	config *config.Config
 }
 
-func NewFactory(config *config.IConfig) IProviderFactory {
+func NewFactory(config *config.Config) ProvidersFactory {
 	return &ProviderFactory{config: config}
 }
 
-func (e *ProviderFactory) GetProviderByName(providerName string) (IEmailProvider, error) {
+func (e *ProviderFactory) GetProviderByName(providerName string) (Provider, error) {
 	switch providerName {
 	case "fake":
 		return NewFakeProvider(e.config), nil

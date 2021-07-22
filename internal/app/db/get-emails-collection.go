@@ -5,7 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func GetEmailsCollection(client *mongo.Client, config *config.IConfig) *mongo.Collection {
+func GetEmailsCollection(client *mongo.Client, config *config.Config) *mongo.Collection {
 	database := client.Database((*config).GetDatabaseName())
 	collection := database.Collection("emails")
 	return collection

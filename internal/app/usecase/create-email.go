@@ -2,8 +2,6 @@ package usecase
 
 import (
 	"context"
-	"time"
-
 	"github.com/quadgod/email-service-go/internal/app/db/entity"
 	"github.com/quadgod/email-service-go/internal/app/db/repository"
 )
@@ -23,17 +21,17 @@ type ICreateEmailUseCase interface {
 }
 
 type CreateEmailUseCase struct {
-	emailRepository *repository.IEmailRepository
+	emailRepository *repository.EmailRepository
 }
 
-func NewCreateEmailUseCase(emailRepository *repository.IEmailRepository) ICreateEmailUseCase {
+func NewCreateEmailUseCase(emailRepository repository.EmailRepository) ICreateEmailUseCase {
 	return &CreateEmailUseCase{
-		emailRepository,
+		&emailRepository,
 	}
 }
 
 func (instance *CreateEmailUseCase) Create(ctx context.Context, payload *CreateEmailDTO) (*entity.Email, error) {
-	var now = time.Now()
+	var now = (*instance.emailRepository).GetTimeNow()
 
 	newEmail := entity.Email{
 		Provider:    payload.Provider,

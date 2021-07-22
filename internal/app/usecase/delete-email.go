@@ -10,12 +10,12 @@ type IDeleteEmailUseCase interface {
 }
 
 type DeleteEmailUseCase struct {
-	emailRepository *repository.IEmailRepository
+	emailRepository *repository.EmailRepository
 }
 
-func NewDeleteEmailUseCase(emailRepository *repository.IEmailRepository) IDeleteEmailUseCase {
+func NewDeleteEmailUseCase(emailRepository repository.EmailRepository) IDeleteEmailUseCase {
 	return &DeleteEmailUseCase{
-		emailRepository,
+		&emailRepository,
 	}
 }
 
